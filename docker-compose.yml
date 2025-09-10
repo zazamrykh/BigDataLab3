@@ -19,11 +19,11 @@ services:
       - IPC_LOCK
     entrypoint: sh -c "apk add --no-cache jq && /vault/start.sh"
     healthcheck:
-      test: ["CMD", "vault", "status"]
-      interval: 10s
+      test: ["CMD", "sh", "-c", "vault status && vault kv get secret/database/credentials"]
+      interval: 5s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 10
+      start_period: 15s
 
   postgres:
     image: postgres:16-alpine
@@ -47,8 +47,10 @@ services:
     build: .
     container_name: model-api
     depends_on:
-      - postgres
-      - vault
+      postgres:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
     environment:
       - DB_HOST=postgres
       - DB_PORT=${DB_PORT}
