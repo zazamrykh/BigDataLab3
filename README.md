@@ -20,13 +20,36 @@ Database credentials are stored in Vault and retrieved by the application at run
 ## Setup and Running
 
 1. Clone the repository
-2. Create a `.env` file based on `.env.example` (only needed for initial setup)
-3. Run the application:
+2. Run the application using the provided script with parameters:
    ```
-   docker-compose up -d
+   ./start.sh --db-user=postgres --db-password=your_password --db-name=reviewdb --db-port=5432
    ```
 
-During the first run, Vault will be initialized and the database credentials will be stored in Vault. After that, the application will retrieve the credentials from Vault instead of using environment variables.
+   Alternatively, you can use an environment file:
+   ```
+   ./start.sh --env-file=.env
+   ```
+
+The script will:
+1. Start Vault with database credentials
+2. Start PostgreSQL with initialization variables
+3. Start the application without database credentials (it will retrieve them from Vault)
+
+This approach ensures that database credentials are only passed to the services that need them, and the application retrieves credentials only from Vault.
+
+### Command Line Options
+
+```
+Usage: ./start.sh [options]
+Options:
+  --db-user=USER         Database user (default: postgres)
+  --db-password=PASSWORD Database password (default: postgres)
+  --db-name=NAME         Database name (default: reviewdb)
+  --db-port=PORT         Database port (default: 5432)
+  --vault-addr=ADDR      Vault address (default: http://vault:8200)
+  --env-file=FILE        Environment file to use
+  --help                 Show this help message
+```
 
 ## API Endpoints
 

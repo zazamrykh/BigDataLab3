@@ -17,6 +17,22 @@ export VAULT_TOKEN='root'
 # In dev mode, KV v2 is already enabled at 'secret/'
 # We don't need to enable it again
 
+# Check if environment variables are set
+if [ -z "${DB_USER}" ] || [ -z "${DB_PASSWORD}" ] || [ -z "${DB_NAME}" ] || [ -z "${DB_PORT}" ]; then
+  echo "Warning: One or more database environment variables are not set."
+  echo "DB_USER: ${DB_USER:-not set}"
+  echo "DB_PASSWORD: ${DB_PASSWORD:-not set}"
+  echo "DB_NAME: ${DB_NAME:-not set}"
+  echo "DB_PORT: ${DB_PORT:-not set}"
+  echo "Using default values for missing variables."
+
+  # Set default values if not provided
+  DB_USER=${DB_USER:-postgres}
+  DB_PASSWORD=${DB_PASSWORD:-postgres}
+  DB_NAME=${DB_NAME:-reviewdb}
+  DB_PORT=${DB_PORT:-5432}
+fi
+
 # Store database credentials in Vault
 # For KV v2, we use 'kv put'
 vault kv put secret/database/credentials \

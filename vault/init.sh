@@ -41,6 +41,22 @@ vault policy write app-policy /tmp/app-policy.hcl  # записать полит
 # Create an app token with the app-policy
 vault token create -policy=app-policy -format=json | jq -r '.auth.client_token' > /vault/data/app_token.txt  # без интерактива [1]
 
+# Check if environment variables are set
+if [ -z "${DB_USER}" ] || [ -z "${DB_PASSWORD}" ] || [ -z "${DB_NAME}" ] || [ -z "${DB_PORT}" ]; then
+  echo "Warning: One or more database environment variables are not set."
+  echo "DB_USER: ${DB_USER:-not set}"
+  echo "DB_PASSWORD: ${DB_PASSWORD:-not set}"
+  echo "DB_NAME: ${DB_NAME:-not set}"
+  echo "DB_PORT: ${DB_PORT:-not set}"
+  echo "Using default values for missing variables."
+
+  # Set default values if not provided
+  DB_USER=${DB_USER:-postgres}
+  DB_PASSWORD=${DB_PASSWORD:-postgres}
+  DB_NAME=${DB_NAME:-reviewdb}
+  DB_PORT=${DB_PORT:-5432}
+fi
+
 # Store database credentials in Vault (KV v2 via CLI path 'kv/...')
 vault kv put kv/database/credentials \
   username="${DB_USER}" \
