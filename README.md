@@ -48,8 +48,11 @@ Options:
   --db-port=PORT         Database port (default: 5432)
   --vault-addr=ADDR      Vault address (default: http://vault:8200)
   --env-file=FILE        Environment file to use
+  --clean                Remove existing volumes before starting (use with caution!)
   --help                 Show this help message
 ```
+
+> **Note**: If you encounter issues with PostgreSQL authentication or "role does not exist" errors, try using the `--clean` flag to remove existing volumes and start fresh. This is especially useful when changing database credentials.
 
 ## API Endpoints
 

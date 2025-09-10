@@ -10,6 +10,9 @@ DB_NAME="reviewdb"
 DB_PORT="5432"
 VAULT_ADDR="http://vault:8200"
 
+# Default flag for cleaning volumes
+CLEAN_VOLUMES=false
+
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -37,6 +40,10 @@ while [[ $# -gt 0 ]]; do
       ENV_FILE="${1#*=}"
       shift
       ;;
+    --clean)
+      CLEAN_VOLUMES=true
+      shift
+      ;;
     --help)
       echo "Usage: $0 [options]"
       echo "Options:"
@@ -46,6 +53,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --db-port=PORT         Database port (default: 5432)"
       echo "  --vault-addr=ADDR      Vault address (default: http://vault:8200)"
       echo "  --env-file=FILE        Environment file to use"
+      echo "  --clean                Remove existing volumes before starting (use with caution!)"
       echo "  --help                 Show this help message"
       exit 0
       ;;
@@ -65,6 +73,13 @@ if [ -n "$ENV_FILE" ] && [ -f "$ENV_FILE" ]; then
   echo "Application started successfully with environment file!"
 else
   echo "Starting services separately with appropriate environment variables..."
+
+  # Clean volumes if requested
+  if [ "$CLEAN_VOLUMES" = true ]; then
+    echo "Cleaning existing volumes..."
+    docker compose down -v
+    echo "Volumes removed."
+  fi
 
   # Step 1: Start Vault with database credentials
   # Vault needs DB credentials to store them in the vault
@@ -93,15 +108,16 @@ else
   # Step 2: Start PostgreSQL with initialization variables
   # PostgreSQL needs these variables only for initialization
   echo "Starting PostgreSQL service..."
-  POSTGRES_USER=$DB_USER \
-  POSTGRES_PASSWORD=$DB_PASSWORD \
-  POSTGRES_DB=$DB_NAME \
+  # Export variables so they are available to docker-compose
+  export POSTGRES_USER=$DB_USER
+  export POSTGRES_PASSWORD=$DB_PASSWORD
+  export POSTGRES_DB=$DB_NAME
   docker compose up -d postgres
 
   # Wait for PostgreSQL to be ready
   echo "Waiting for PostgreSQL to be ready..."
   for i in {1..30}; do
-    if docker compose exec postgres pg_isready -U $DB_USER > /dev/null 2>&1; then
+    if docker compose exec postgres pg_isready -U postgres > /dev/null 2>&1; then
       echo "PostgreSQL is ready!"
       break
     fi
